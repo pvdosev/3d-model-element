@@ -7,7 +7,7 @@ let perspectiveCamera;
 let orthographicCamera;
 let renderer;
 let scene;
-let light;
+//let light;
 
 const objs = [];
 
@@ -21,9 +21,15 @@ const init = () => {
   scene = new THREE.Scene();
 
   // add a light
-  light = new THREE.PointLight(0x808080, 2, 0);
-  light.position.set(0, 0, 0);
-  scene.add(light);
+  //light = new THREE.PointLight(0x808080, 0, 0);
+  //light.position.set(0, 0, 0);
+  //scene.add(light);
+
+  const directionallight = new THREE.DirectionalLight( 0xffffff, 15);
+  scene.add( directionallight );
+  scene.add( directionallight.target );
+  directionallight.position.set( 0, 1, 0 );
+  directionallight.target.position.set( .1, .5, -.1);
 
   /*
   var sphereSize = .5;
@@ -139,9 +145,9 @@ const update = () => {
         camera = setOrthographicCamera(projection.cameraBounds);
       }
 
-      light.position.x = projection.cameraBounds.left + (projection.cameraBounds.right - projection.cameraBounds.left) / 2 - overlayWidth / 2;
-      light.position.y = overlayHeight / 2 - projection.cameraBounds.top - (projection.cameraBounds.bottom - projection.cameraBounds.top) / 2;
-      light.position.z = camera.far;
+      //light.position.x = projection.cameraBounds.left + (projection.cameraBounds.right - projection.cameraBounds.left) / 2 - overlayWidth / 2;
+      //light.position.y = overlayHeight / 2 - projection.cameraBounds.top - (projection.cameraBounds.bottom - projection.cameraBounds.top) / 2;
+      //light.position.z = camera.far;
 
       // Set the clipping box (scissor) and render the element.
       renderer.setScissor(

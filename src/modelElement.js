@@ -67,7 +67,7 @@ let intersectionObserver;
 
 const intersectionCallback = entries => {
   entries.forEach(entry => {
-    let obj = objects.get(entry.target.parentElement);
+    let obj = objects.get(entry.target.parentElement.offsetParent); // this should be x-model-element root canvas
     if (entry.isIntersecting) {
       if (obj.axisInView < 6) {
         if (obj.axisInView === 0) {
@@ -84,28 +84,6 @@ const intersectionCallback = entries => {
       }
     }
   });
-};
-
-
-const initModelLayer = () => {
-  // The first time an element is added to the document we inject a
-  // stylesheet that contains its default styles. Ideally this would be
-  // appended to the shadow DOM, but support for that isn't great right now.
-  styleElem = domUtils.createStylesheet(CANVAS_DEFAULT_STYLES);
-  let head = document.documentElement.firstChild;
-  head.insertBefore(styleElem, head.firstChild);
-
-  // Initialize the model layer and append the resulting DOM node to the
-  // document root - outside the <body> to prevent perspective or transform
-  // styles from affecting it.
-  let renderDomElement = modelLayer.init();
-  renderDomElement.setAttribute('id', 'x-model-renderLayer');
-  document.documentElement.appendChild(renderDomElement);
-
-  // Use an intersection observer to watch for elements entering and leaving
-  // the viewport
-  intersectionObserver = new IntersectionObserver(intersectionCallback);
-
 };
 
 
@@ -126,34 +104,49 @@ export default class extends HTMLElement {
     return ['src', 'width', 'height'];
   }
 
+  init3DObject(obj) {
+    let model = obj.children[0];
+    let size = model.userData.size;
+    let scale = Math.min(this.offsetWidth / size.x, this.offsetHeight / size.y);
+    let scaleX = size.x * scale;
+    let scaleY = size.y * scale;
+    let scaleZ = size.z * scale;
+
+    // Scale and distort the DOM bounding box (a cube) along X, Y and Z axis
+    // so it matches the size and shape of the models bounding box.
+    let box = this.shadowRoot.querySelector('.boundingBox');
+    box.style.transform = `translate(-50%,-50%)scale3d(${scaleX},${scaleY},${scaleZ})`;
+
+    // Monitor each face with an `IntersectionObserver` so we can determine if
+    // the model is visible in the viewport when it's rendered with
+    // perspective projection.
+    let faces = Array.from(box.children);
+    faces.forEach(elem => intersectionObserver.observe(elem));
+
+    obj.elem = this; //TODO: figure out what uses this
+    obj.axisInView = 0;
+    console.log(objects);
+  }
+
   connectedCallback() {
     if (!styleElem) {
-      initModelLayer();
-    }
-    let obj = objects.get(this);
-    if (obj && obj.elem !== this) {
-      let model = obj.children[0];
-      let size = model.userData.size;
-      let scale = Math.min(this.offsetWidth / size.x, this.offsetHeight / size.y);
-      let scaleX = size.x * scale;
-      let scaleY = size.y * scale;
-      let scaleZ = size.z * scale;
+      // The first time an element is added to the document we inject a
+      // stylesheet that contains its default styles. Ideally this would be
+      // appended to the shadow DOM, but support for that isn't great right now.
+      styleElem = domUtils.createStylesheet(CANVAS_DEFAULT_STYLES);
+      let head = document.documentElement.firstChild;
+      head.insertBefore(styleElem, head.firstChild);
 
-      // Scale and distort the DOM bounding box (a cube) along X, Y and Z axis
-      // so it matches the size and shape of the models bounding box.
-      let box = this.shadowRoot.querySelector('.boundingBox');
-      box.style.transform = `translate(-50%,-50%)scale3d(${scaleX},${scaleY},${scaleZ})`;
+      // Initialize the model layer and append the resulting DOM node to the
+      // document root - outside the <body> to prevent perspective or transform
+      // styles from affecting it.
+      let renderDomElement = modelLayer.init();
+      renderDomElement.setAttribute('id', 'x-model-renderLayer');
+      document.documentElement.appendChild(renderDomElement);
 
-      // Monitor each face with an `IntersectionObserver` so we can determine if
-      // the model is visible in the viewport when it's rendered with
-      // perspective projection.
-      let faces = Array.from(box.children);
-      faces.forEach(elem => intersectionObserver.observe(elem));
-
-      obj.elem = this;
-      obj.axisInView = 0;
-
-      objects.set(box, obj);
+      // Use an intersection observer to watch for elements entering and leaving
+      // the viewport
+      intersectionObserver = new IntersectionObserver(intersectionCallback);
     }
   }
 
@@ -182,8 +175,9 @@ export default class extends HTMLElement {
       modelLoader.load(newValue).then(obj => {
         let event = new UIEvent('load');
         this.dispatchEvent(event);
+        
         objects.set(this, obj);
-        this.connectedCallback();
+        this.init3DObject(obj);
       }).catch(e => {
         let event = new UIEvent('error');
         this.dispatchEvent(event);
