@@ -68,6 +68,7 @@ let intersectionObserver;
 const intersectionCallback = entries => {
   entries.forEach(entry => {
     let obj = objects.get(entry.target.parentElement.offsetParent); // this should be x-model-element root canvas
+    console.log(obj, "offsetParent");
     if (entry.isIntersecting) {
       if (obj.axisInView < 6) {
         if (obj.axisInView === 0) {
@@ -125,7 +126,8 @@ export default class extends HTMLElement {
 
     obj.elem = this; //TODO: figure out what uses this
     obj.axisInView = 0;
-    console.log(objects);
+    console.log(obj, "obj");
+    console.log(model, "model");
   }
 
   connectedCallback() {
