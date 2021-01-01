@@ -1,5 +1,5 @@
-import modelUtils from './utils/model';
-import urlUtils from './utils/url';
+import modelUtils from './utils/model.js';
+import urlUtils from './utils/url.js';
 
 
 const loaders = {};

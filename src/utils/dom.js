@@ -1,4 +1,4 @@
-import cssUtils from './css';
+import cssUtils from './css.js';
 
 /**
  * Resolves and returns the transform and perspective properties for a given

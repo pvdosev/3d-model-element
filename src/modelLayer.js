@@ -1,4 +1,4 @@
-import domUtils from './utils/dom';
+import domUtils from './utils/dom.js';
 
 let camera;
 let overlayWidth;

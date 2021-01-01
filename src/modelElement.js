@@ -1,6 +1,6 @@
-import modelLoader from './modelLoader';
-import modelLayer from './modelLayer';
-import domUtils from './utils/dom';
+import modelLoader from './modelLoader.js';
+import modelLayer from './modelLayer.js';
+import domUtils from './utils/dom.js';
 
 
 const objects = new WeakMap();
